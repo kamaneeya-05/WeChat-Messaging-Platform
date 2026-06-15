@@ -17,8 +17,15 @@ const { configureSupportSockets } = require('./sockets/supportSocket');
 dotenv.config();
 
 const CLIENT_URL = process.env.CLIENT_URL;
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.RENDER_EXTERNAL_URL,
+  CLIENT_URL,
+].filter(Boolean);
+
 const corsOptions = {
-  origin: CLIENT_URL || true,
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true,
 };
