@@ -23,8 +23,6 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // 1. Connect to Database
-
-// 1. Connect to Database
 connectDB();
 
 // 2. Setup Routes
@@ -39,7 +37,7 @@ app.use('/api/support', supportRoutes);
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../../message/dist');
   app.use(express.static(distPath));
-  app.get('*', (req, res, next) => {
+  app.get('/*', (req, res, next) => {
     if (!req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
       return res.sendFile(path.join(distPath, 'index.html'));
     }
