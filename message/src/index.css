@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #a7f3d0 transparent;
+  }
+
+  body {
+    margin: 0;
+    background: #f8fbff;
+  }
+
+  ::selection {
+    background: #a7f3d0;
+    color: #064e3b;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb,
+  *::-webkit-scrollbar-thumb {
+    background: #a7f3d0;
+    border-radius: 999px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
