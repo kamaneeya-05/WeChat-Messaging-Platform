@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const fs = require('fs');
 const path = require('path');
 const connectDB = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
@@ -41,14 +42,18 @@ app.use('/api/support', supportRoutes);
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../../message/dist');
-  app.use(express.static(distPath));
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
-      return next();
-    }
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.use((req, res, next) => {
+      if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+        return next();
+      }
 
-    return res.sendFile(path.join(distPath, 'index.html'));
-  });
+      return res.sendFile(path.join(distPath, 'index.html'));
+    });
+  } else {
+    console.warn(`[WARN] production build folder not found at ${distPath}. Static frontend routing is disabled.`);
+  }
 }
 
 const server = http.createServer(app);
