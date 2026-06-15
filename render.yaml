@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: wechat-messaging-platform
+    env: node
+    branch: main
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && NODE_ENV=production npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Set these in Render dashboard, do not commit secrets here
+      # - key: MONGO_URI
+      #   fromService: your-service-name
+      # - key: JWT_SECRET
+      #   fromService: your-service-name
+      # - key: CLIENT_URL
+      #   value: https://wechat-messaging-platform-1.onrender.com
