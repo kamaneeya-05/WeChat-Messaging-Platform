@@ -15,10 +15,15 @@ const { configureSupportSockets } = require('./sockets/supportSocket');
 
 dotenv.config();
 
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const CLIENT_URL = process.env.CLIENT_URL;
+const corsOptions = {
+  origin: CLIENT_URL || true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  credentials: true,
+};
 
 const app = express();
-app.use(cors({ origin: CLIENT_URL }));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
@@ -47,10 +52,7 @@ if (process.env.NODE_ENV === 'production') {
 
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: CLIENT_URL, 
-    methods: ["GET", "POST","PUT", "PATCH", "DELETE"]
-  }
+  cors: corsOptions,
 });
 
 // Configure Socket.io events
@@ -66,6 +68,30 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
+server.on('error', (error) => {
+  if (error.syscall !== 'listen') {
+    console.error('Server error:', error);
+    process.exit(1);
+  }
+
+  const bind = typeof PORT === 'string' ? `Pipe ${PORT}` : `Port ${PORT}`;
+
+  switch (error.code) {
+    case 'EACCES':
+      console.error(`${bind} requires elevated privileges.`);
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(`${bind} is already in use. Please stop the process using this port or set a different PORT environment variable.`);
+      process.exit(1);
+      break;
+    default:
+      console.error('Server error:', error);
+      process.exit(1);
+  }
+});
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 import { 
   ShieldAlert, 
   ArrowLeft, 
@@ -96,7 +97,7 @@ export function AdminDashboard() {
       try {
         await axios.post(`${API_BASE_URL}/api/support/session/${sessionId}/end`);
         // Notify socket server to disconnect participants
-        const socket = require('socket.io-client')(API_BASE_URL);
+        const socket = io(API_BASE_URL);
         socket.emit('end-support-call', { sessionId });
         socket.disconnect();
         
