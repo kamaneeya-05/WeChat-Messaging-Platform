@@ -21,7 +21,7 @@ export default function VoiceCallModal({ localStream, remoteStream, onEnd, onTog
     return () => clearInterval(t);
   }, [call]);
 
-  if (!call || !['connected', 'calling', 'ringing'].includes(call.state)) return null;
+  if (!call || !['connected', 'calling', 'connecting'].includes(call.state) || call.callType === 'video') return null;
 
   return (
     <div className="fixed bottom-6 right-6 z-40 w-80 rounded-xl bg-white p-4 shadow-2xl">

@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  state: 'idle', // idle, calling, incoming, ringing, connected, ended
+  state: 'idle', // idle, calling, incoming, connecting, connected, ended
   caller: null,
   receiver: null,
   callType: null,
@@ -17,6 +17,7 @@ const callSlice = createSlice({
   reducers: {
     setCalling: (s, a) => ({ ...s, state: 'calling', ...a.payload }),
     setIncoming: (s, a) => ({ ...s, state: 'incoming', ...a.payload }),
+    setConnecting: (s, a) => ({ ...s, state: 'connecting', ...a.payload }),
     setRinging: (s, a) => ({ ...s, state: 'ringing', ...a.payload }),
     setConnected: (s, a) => ({ ...s, state: 'connected', startedAt: a.payload.startedAt || new Date(), ...a.payload }),
     setEnded: (s, a) => ({ ...s, state: 'ended', duration: a.payload?.duration || 0, ...a.payload }),
@@ -25,5 +26,5 @@ const callSlice = createSlice({
   },
 });
 
-export const { setCalling, setIncoming, setRinging, setConnected, setEnded, resetCall, updateDuration } = callSlice.actions;
+export const { setCalling, setIncoming, setConnecting, setRinging, setConnected, setEnded, resetCall, updateDuration } = callSlice.actions;
 export default callSlice.reducer;

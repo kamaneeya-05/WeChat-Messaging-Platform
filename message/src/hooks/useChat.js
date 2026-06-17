@@ -1,4 +1,4 @@
-  import { useEffect, useState, useCallback, useRef } from 'react';
+  import { useEffect, useState, useCallback } from 'react';
   import { io } from 'socket.io-client';
   import axios from 'axios';
   import { useAppDispatch, useAppSelector } from '../store/hooks';
@@ -12,6 +12,8 @@
     addConversation,
     markConversationRead,
     markMyMessagesReadInChat,
+    updateParticipantStatus,
+    setBulkParticipantStatus,
   } from '../store/features/chatSlice';
 
   const ENDPOINT = API_BASE_URL; // Make sure this matches your Express server port
@@ -20,11 +22,10 @@
     const dispatch = useAppDispatch();
     
     // Pulling global state from Redux
-    const { user, isAuthenticated, token } = useAppSelector((state) => state.auth);
+    const { user, isAuthenticated } = useAppSelector((state) => state.auth);
     const { conversations, activeConversation, activeMessages } = useAppSelector((state) => state.chat);
     
     const [socket, setSocket] = useState(null);
-    const offlineSyncSentRef = useRef(false);
 
     // 1. Establish Socket Connection on Login
     useEffect(() => {
@@ -32,51 +33,18 @@
         const newSocket = io(ENDPOINT);
         setSocket(newSocket);
 
-      newSocket.on('connect', () => {
-      console.log('Connected to socket server');
-      newSocket.emit('setup', user._id || user.id); 
-    });
+        const userId = user._id || user.id;
+
+        newSocket.on('connect', () => {
+          console.log('Connected to socket server');
+          newSocket.emit('setup', userId);
+        });
 
         return () => {
           newSocket.disconnect();
         };
       }
     }, [isAuthenticated, user]);
-
-    // 1b. Best-effort offline update on tab/window close
-    useEffect(() => {
-      if (!isAuthenticated || !token) return;
-
-      offlineSyncSentRef.current = false;
-
-      const syncOfflineStatus = () => {
-        if (offlineSyncSentRef.current) return;
-        offlineSyncSentRef.current = true;
-
-        fetch(`${ENDPOINT}/api/auth/logout`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ source: 'page-unload' }),
-          keepalive: true,
-        }).catch(() => {
-          // Best-effort only: ignore network shutdown errors on unload
-        });
-      };
-
-      const handleBeforeUnload = () => syncOfflineStatus();
-      const handlePageHide = () => syncOfflineStatus();
-
-      window.addEventListener('beforeunload', handleBeforeUnload);
-      window.addEventListener('pagehide', handlePageHide);
-
-      return () => {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-        window.removeEventListener('pagehide', handlePageHide);
-      };
-    }, [isAuthenticated, token]);
 
   
 
@@ -96,6 +64,29 @@
         fetchChats();
       }
     }, [isAuthenticated, dispatch]);
+
+    // 2b. Real-time presence updates
+    useEffect(() => {
+      if (!socket) return;
+
+      const handleStatusChange = ({ userId, status }) => {
+        dispatch(updateParticipantStatus({ userId, status }));
+      };
+
+      const handleOnlineUsers = ({ userIds }) => {
+        if (userIds?.length) {
+          dispatch(setBulkParticipantStatus({ userIds, status: 'online' }));
+        }
+      };
+
+      socket.on('user-status-changed', handleStatusChange);
+      socket.on('online-users', handleOnlineUsers);
+
+      return () => {
+        socket.off('user-status-changed', handleStatusChange);
+        socket.off('online-users', handleOnlineUsers);
+      };
+    }, [socket, dispatch]);
 
     // 3. Handle Active Conversation Logic (Fetch Messages & Listen for Real-time Updates)
     useEffect(() => {

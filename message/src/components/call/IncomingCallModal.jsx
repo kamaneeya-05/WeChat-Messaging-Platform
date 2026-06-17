@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAppSelector } from '../../store/hooks';
 
-export default function IncomingCallModal({ socket, onAccept, onReject }) {
+export default function IncomingCallModal({ onAccept, onReject }) {
   const call = useAppSelector((s) => s.call);
   if (!call || call.state !== 'incoming') return null;
 

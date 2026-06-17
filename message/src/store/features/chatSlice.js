@@ -79,6 +79,38 @@ const chatSlice = createSlice({
         return msg;
       });
     },
+    updateParticipantStatus: (state, action) => {
+      const { userId, status } = action.payload;
+      const matchId = (p) => String(p._id || p.id) === String(userId);
+
+      state.conversations.forEach((conv) => {
+        conv.participants?.forEach((p) => {
+          if (matchId(p)) p.status = status;
+        });
+      });
+
+      if (state.activeConversation?.participants) {
+        state.activeConversation.participants.forEach((p) => {
+          if (matchId(p)) p.status = status;
+        });
+      }
+    },
+    setBulkParticipantStatus: (state, action) => {
+      const { userIds, status } = action.payload;
+      const idSet = new Set(userIds.map(String));
+
+      state.conversations.forEach((conv) => {
+        conv.participants?.forEach((p) => {
+          if (idSet.has(String(p._id || p.id))) p.status = status;
+        });
+      });
+
+      if (state.activeConversation?.participants) {
+        state.activeConversation.participants.forEach((p) => {
+          if (idSet.has(String(p._id || p.id))) p.status = status;
+        });
+      }
+    },
     clearChatState: (state) => {
       state.activeConversation = null;
       state.activeMessages = [];
@@ -109,6 +141,8 @@ export const {
   updateMessageAsDeleted,
   markConversationRead,
   markMyMessagesReadInChat,
+  updateParticipantStatus,
+  setBulkParticipantStatus,
   clearChatState,
   setTheme,
   setWallpaper,
