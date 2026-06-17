@@ -18,8 +18,8 @@ export default function IncomingCallModal({ onAccept, onReject }) {
           </div>
         </div>
         <div className="mt-4 flex gap-3 justify-end">
-          <button onClick={() => onReject({ from: caller, callId: call.callId })} className="px-4 py-2 rounded bg-red-500 text-white">Reject</button>
-          <button onClick={() => onAccept({ from: caller, callId: call.callId })} className="px-4 py-2 rounded bg-emerald-600 text-white">Accept</button>
+          <button type="button" onClick={() => onReject({ from: caller, callId: call.callId })} className="px-4 py-2 rounded bg-red-500 text-white">Reject</button>
+          <button type="button" onClick={() => onAccept({ from: caller, callId: call.callId })} className="px-4 py-2 rounded bg-emerald-600 text-white">Accept</button>
         </div>
       </div>
     </div>

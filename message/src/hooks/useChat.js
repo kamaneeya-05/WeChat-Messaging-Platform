@@ -30,21 +30,32 @@
     // 1. Establish Socket Connection on Login
     useEffect(() => {
       if (isAuthenticated && user) {
-        const newSocket = io(ENDPOINT);
+        const userId = String(user._id || user.id);
+        const newSocket = io(ENDPOINT, {
+          transports: ['websocket', 'polling'],
+          reconnection: true,
+          reconnectionAttempts: 10,
+          reconnectionDelay: 1000,
+        });
         setSocket(newSocket);
 
-        const userId = user._id || user.id;
-
-        newSocket.on('connect', () => {
+        const onConnect = () => {
           console.log('Connected to socket server');
           newSocket.emit('setup', userId);
-        });
+        };
+
+        newSocket.on('connect', onConnect);
+
+        if (newSocket.connected) {
+          onConnect();
+        }
 
         return () => {
+          newSocket.off('connect', onConnect);
           newSocket.disconnect();
         };
       }
-    }, [isAuthenticated, user]);
+    }, [isAuthenticated, user?._id, user?.id]);
 
   
 
