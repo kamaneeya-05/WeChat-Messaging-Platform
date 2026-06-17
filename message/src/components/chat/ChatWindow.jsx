@@ -1,59 +1,39 @@
 import { useEffect, useRef, useState } from 'react';
 import { Phone, PhoneOff, Video } from 'lucide-react';
 import ChatHeader from './ChatHeader';
+import { useCall } from '../../hooks/useCall';
+import IncomingCallModal from '../call/IncomingCallModal';
+import VoiceCallModal from '../call/VoiceCallModal';
+import VideoCallModal from '../call/VideoCallModal';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import InfoPanel from './InfoPanel';
+import { useAppSelector } from '../../store/hooks';
 
-export default function ChatWindow({ conversation, messages, members, onSendMessage }) {
+export default function ChatWindow({ conversation, messages, members, onSendMessage, socket }) {
   const [showInfo, setShowInfo] = useState(false);
-  const [callMode, setCallMode] = useState(null);
   const [callError, setCallError] = useState('');
   const localVideoRef = useRef(null);
-  const streamRef = useRef(null);
 
-  const endCall = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (localVideoRef.current) {
-      localVideoRef.current.srcObject = null;
-    }
-    setCallMode(null);
-    setCallError('');
-  };
+  const { localStream, remoteStream, startCall, acceptCall, rejectCall, endCall, toggleMute, toggleCamera, startScreenShare, callState } = useCall(socket);
 
-  const startCall = async (mode) => {
-    try {
-      setCallError('');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: mode === 'video',
-      });
-      streamRef.current = stream;
-      setCallMode(mode);
-    } catch {
-      setCallError(
-        mode === 'video'
-          ? 'Camera/microphone permission is required for video call.'
-          : 'Microphone permission is required for voice call.'
-      );
-    }
-  };
+  const currentUser = useAppSelector((s) => s.auth.user);
+  const currentUserId = String(currentUser?._id || currentUser?.id || '');
+  const targetUser = conversation?.participants?.find((p) => String(p?._id || p?.id || '') !== currentUserId);
 
   useEffect(() => {
-    if (!localVideoRef.current || !streamRef.current) return;
-    localVideoRef.current.srcObject = streamRef.current;
-  }, [callMode]);
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream]);
 
   useEffect(() => {
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
+      if (localStream) {
+        localStream.getTracks().forEach((t) => t.stop());
       }
     };
-  }, []);
+  }, [localStream]);
 
   return (
     <div className="flex-1 flex h-full overflow-hidden">
@@ -62,47 +42,18 @@ export default function ChatWindow({ conversation, messages, members, onSendMess
           conversation={conversation}
           onInfoToggle={() => setShowInfo(!showInfo)}
           showInfo={showInfo}
-          onVoiceCall={() => startCall('voice')}
-          onVideoCall={() => startCall('video')}
+          onVoiceCall={() => startCall({ targetUser, callType: 'voice' })}
+          onVideoCall={() => startCall({ targetUser, callType: 'video' })}
         />
         {callError && (
           <div className="mx-4 mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {callError}
           </div>
         )}
-        {callMode && (
-          <div className="mx-4 mt-2 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {callMode === 'video' ? <Video size={16} className="text-blue-500" /> : <Phone size={16} className="text-blue-500" />}
-                <span className="text-sm font-medium text-slate-700">
-                  {callMode === 'video' ? 'Video call active' : 'Voice call active'}
-                </span>
-              </div>
-              <button
-                onClick={endCall}
-                className="flex items-center gap-1 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-600"
-              >
-                <PhoneOff size={14} />
-                End call
-              </button>
-            </div>
-
-            {callMode === 'video' ? (
-              <video
-                ref={localVideoRef}
-                autoPlay
-                muted
-                playsInline
-                className="mt-3 h-40 w-64 rounded-lg bg-slate-900 object-cover"
-              />
-            ) : (
-              <p className="mt-2 text-xs text-slate-500">
-                Voice call is connected. Your microphone is live.
-              </p>
-            )}
-          </div>
-        )}
+        {/* Call UI handled via modals */}
+        <IncomingCallModal socket={socket} onAccept={acceptCall} onReject={rejectCall} />
+        <VideoCallModal localStream={localStream} remoteStream={remoteStream} onEnd={() => endCall({ toUser: conversation.participants?.find(p => p._id !== undefined) })} onToggleMute={toggleMute} onToggleCamera={toggleCamera} onShareScreen={startScreenShare} />
+        <VoiceCallModal localStream={localStream} remoteStream={remoteStream} onEnd={() => endCall({ toUser: conversation.participants?.find(p => p._id !== undefined) })} onToggleMute={toggleMute} />
         <MessageList
           messages={messages}
           isGroupChat={conversation.type === 'group'}

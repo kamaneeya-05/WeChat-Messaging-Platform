@@ -20,7 +20,7 @@ import EmptyState from './components/common/EmptyState';
 
 // --- THE MAIN CHAT UI (Extracted from your original App) ---
 const ChatDashboard = () => {
-  const { conversations, activeConversation, activeMessages, selectConversation, sendMessage } = useChat();
+  const { conversations, activeConversation, activeMessages, selectConversation, sendMessage, socket } = useChat();
 
   // Grab the REAL logged-in user from Redux!
   const realCurrentUser = useAppSelector((state) => state.auth.user);
@@ -48,6 +48,7 @@ const ChatDashboard = () => {
             messages={activeMessages}
             members={activeMembers}
             onSendMessage={sendMessage}
+            socket={socket}
           />
         ) : (
           <EmptyState />

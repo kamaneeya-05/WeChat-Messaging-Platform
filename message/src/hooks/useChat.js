@@ -259,5 +259,6 @@
       selectConversation,
       sendMessage,
       startDirectMessage,
+      socket,
     };
   }
