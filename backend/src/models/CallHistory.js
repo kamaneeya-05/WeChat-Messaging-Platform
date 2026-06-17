@@ -8,7 +8,7 @@ const CallHistorySchema = new Schema({
   startedAt: { type: Date, default: Date.now },
   endedAt: { type: Date },
   duration: { type: Number, default: 0 }, // seconds
-  status: { type: String, enum: ['missed', 'completed', 'rejected', 'failed', 'cancelled', 'ringing'], default: 'ringing' },
+  status: { type: String, enum: ['missed', 'completed', 'rejected', 'failed', 'cancelled', 'ringing', 'in-progress'], default: 'ringing' },
   roomId: { type: String },
 }, { timestamps: true });
 
