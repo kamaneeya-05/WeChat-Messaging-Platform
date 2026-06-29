@@ -1,6 +1,6 @@
 # 💬 Real-Time Chat & Customer Support Platform
 
-A full-stack real-time communication platform that enables secure messaging, voice/video support sessions, file sharing, and live customer assistance. The application provides dedicated interfaces for customers, support agents, and administrators while maintaining persistent chat history and session analytics.
+A MERN-stack real-time communication platform that enables secure messaging, voice/video support sessions, file sharing, and live customer assistance, meetings and sessions. The application provides dedicated interfaces for customers, support agents, and administrators while maintaining persistent chat history and session analytics.
 
 ---
 
